@@ -2,7 +2,7 @@ package com.company.erp.project.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
-class UpdateStatusRequest {
+public class UpdateStatusRequest {
 
     @NotNull(message = "Status is required")
     private String status;

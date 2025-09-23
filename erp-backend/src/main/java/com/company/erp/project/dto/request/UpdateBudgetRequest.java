@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 // Update Budget Request DTO
-class UpdateBudgetRequest {
+public class UpdateBudgetRequest {
 
     @NotNull(message = "Allocated budget is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Budget must be positive")

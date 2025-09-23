@@ -4,7 +4,7 @@ package com.company.erp.project.dto.request;
 import jakarta.validation.constraints.NotNull;
 
 // Assign Manager Request DTO
-class AssignManagerRequest {
+public class AssignManagerRequest {
 
     @NotNull(message = "Manager ID is required")
     private Long managerId;

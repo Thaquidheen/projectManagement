@@ -1,5 +1,6 @@
 package com.company.erp.project.controller;
 
+import com.company.erp.common.security.UserPrincipal;
 import com.company.erp.project.dto.request.AssignManagerRequest;
 import com.company.erp.project.dto.request.CreateProjectRequest;
 import com.company.erp.project.dto.request.UpdateBudgetRequest;
@@ -24,6 +25,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -301,8 +304,12 @@ public class ProjectController {
 
     // Helper method to get current user ID from security context
     private Long getCurrentUserId() {
-        // This should be implemented to extract user ID from JWT token
-        // For now, returning a placeholder
-        return 1L; // TODO: Implement proper user ID extraction
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            return userPrincipal.getId();
+        }
+        throw new RuntimeException("Unable to get current user ID from security context");
     }
 }

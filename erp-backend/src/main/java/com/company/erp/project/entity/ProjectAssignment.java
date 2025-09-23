@@ -120,20 +120,3 @@ public class ProjectAssignment extends AuditableEntity {
     }
 }
 
-// Project Role Enum (if not already defined in Project.java)
-enum ProjectRole {
-    MANAGER("Project Manager"),
-    MEMBER("Team Member"),
-    STAKEHOLDER("Stakeholder"),
-    VIEWER("Viewer");
-
-    private final String displayName;
-
-    ProjectRole(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-}

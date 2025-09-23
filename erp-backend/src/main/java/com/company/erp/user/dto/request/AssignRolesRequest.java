@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.Set;
 
 // Assign Roles Request DTO
-class AssignRolesRequest {
+public class AssignRolesRequest {
 
     @NotEmpty(message = "At least one role is required")
     private Set<String> roles;

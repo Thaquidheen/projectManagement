@@ -73,6 +73,94 @@ public class Project extends AuditableEntity {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectAssignment> assignments = new HashSet<>();
 
+    // Constructors
+    public Project() {}
+
+    public Project(String name, String description, BigDecimal allocatedBudget) {
+        this.name = name;
+        this.description = description;
+        this.allocatedBudget = allocatedBudget;
+        this.remainingBudget = allocatedBudget;
+    }
+
+    // Business methods
+    public void assignManager(User manager) {
+        this.manager = manager;
+        // Add manager as project assignment too
+        addAssignment(manager, ProjectRole.MANAGER);
+    }
+
+    public void addAssignment(User user, ProjectRole role) {
+        ProjectAssignment assignment = new ProjectAssignment(this, user, role);
+        this.assignments.add(assignment);
+    }
+
+    public void removeAssignment(User user, ProjectRole role) {
+        assignments.removeIf(assignment ->
+                assignment.getUser().equals(user) && assignment.getRole().equals(role));
+    }
+
+    public void updateBudget(BigDecimal spentAmount) {
+        this.spentAmount = spentAmount;
+        this.remainingBudget = this.allocatedBudget.subtract(spentAmount);
+    }
+
+    public void increaseBudget(BigDecimal additionalAmount) {
+        this.allocatedBudget = this.allocatedBudget.add(additionalAmount);
+        this.remainingBudget = this.allocatedBudget.subtract(this.spentAmount);
+    }
+
+    public void decreaseBudget(BigDecimal reductionAmount) {
+        if (this.allocatedBudget.subtract(reductionAmount).compareTo(this.spentAmount) >= 0) {
+            this.allocatedBudget = this.allocatedBudget.subtract(reductionAmount);
+            this.remainingBudget = this.allocatedBudget.subtract(this.spentAmount);
+        } else {
+            throw new IllegalArgumentException("Cannot reduce budget below spent amount");
+        }
+    }
+
+    public boolean isOverBudget() {
+        return this.spentAmount.compareTo(this.allocatedBudget) > 0;
+    }
+
+    public boolean isBudgetWarning(BigDecimal warningThreshold) {
+        BigDecimal warningAmount = this.allocatedBudget.multiply(warningThreshold);
+        return this.spentAmount.compareTo(warningAmount) >= 0;
+    }
+
+    public BigDecimal getBudgetUtilizationPercentage() {
+        if (allocatedBudget.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return spentAmount.multiply(new BigDecimal("100")).divide(allocatedBudget, 2, BigDecimal.ROUND_HALF_UP);
+    }
+
+    public void updateCompletionPercentage(BigDecimal percentage) {
+        if (percentage.compareTo(BigDecimal.ZERO) >= 0 && percentage.compareTo(new BigDecimal("100")) <= 0) {
+            this.completionPercentage = percentage;
+
+            // Auto-update status based on completion
+            if (percentage.compareTo(new BigDecimal("100")) == 0) {
+                this.status = ProjectStatus.COMPLETED;
+            } else if (this.status == ProjectStatus.COMPLETED && percentage.compareTo(new BigDecimal("100")) < 0) {
+                this.status = ProjectStatus.ACTIVE;
+            }
+        }
+    }
+
+    public boolean hasManager() {
+        return this.manager != null;
+    }
+
+    public boolean isAssigned(User user) {
+        return assignments.stream()
+                .anyMatch(assignment -> assignment.getUser().equals(user));
+    }
+
+    public boolean isManager(User user) {
+        return this.manager != null && this.manager.equals(user);
+    }
+
     // Getters and Setters
     public String getName() {
         return name;
@@ -196,105 +284,6 @@ public class Project extends AuditableEntity {
     }
 }
 
-// Project Status Enum
-enum ProjectStatus {
-    ACTIVE,
-    COMPLETED,
-    ON_HOLD,
-    CANCELLED
-}
 
-// Project Role Enum
-enum ProjectRole {
-    MANAGER,
-    MEMBER,
-    STAKEHOLDER
-}
-public Project() {}
 
-public Project(String name, String description, BigDecimal allocatedBudget) {
-    this.name = name;
-    this.description = description;
-    this.allocatedBudget = allocatedBudget;
-    this.remainingBudget = allocatedBudget;
-}
 
-// Business methods
-public void assignManager(User manager) {
-    this.manager = manager;
-    // Add manager as project assignment too
-    addAssignment(manager, ProjectRole.MANAGER);
-}
-
-public void addAssignment(User user, ProjectRole role) {
-    ProjectAssignment assignment = new ProjectAssignment(this, user, role);
-    this.assignments.add(assignment);
-}
-
-public void removeAssignment(User user, ProjectRole role) {
-    assignments.removeIf(assignment ->
-            assignment.getUser().equals(user) && assignment.getRole().equals(role));
-}
-
-public void updateBudget(BigDecimal spentAmount) {
-    this.spentAmount = spentAmount;
-    this.remainingBudget = this.allocatedBudget.subtract(spentAmount);
-}
-
-public void increaseBudget(BigDecimal additionalAmount) {
-    this.allocatedBudget = this.allocatedBudget.add(additionalAmount);
-    this.remainingBudget = this.allocatedBudget.subtract(this.spentAmount);
-}
-
-public void decreaseBudget(BigDecimal reductionAmount) {
-    if (this.allocatedBudget.subtract(reductionAmount).compareTo(this.spentAmount) >= 0) {
-        this.allocatedBudget = this.allocatedBudget.subtract(reductionAmount);
-        this.remainingBudget = this.allocatedBudget.subtract(this.spentAmount);
-    } else {
-        throw new IllegalArgumentException("Cannot reduce budget below spent amount");
-    }
-}
-
-public boolean isOverBudget() {
-    return this.spentAmount.compareTo(this.allocatedBudget) > 0;
-}
-
-public boolean isBudgetWarning(BigDecimal warningThreshold) {
-    BigDecimal warningAmount = this.allocatedBudget.multiply(warningThreshold);
-    return this.spentAmount.compareTo(warningAmount) >= 0;
-}
-
-public BigDecimal getBudgetUtilizationPercentage() {
-    if (allocatedBudget.compareTo(BigDecimal.ZERO) == 0) {
-        return BigDecimal.ZERO;
-    }
-    return spentAmount.multiply(new BigDecimal("100")).divide(allocatedBudget, 2, BigDecimal.ROUND_HALF_UP);
-}
-
-public void updateCompletionPercentage(BigDecimal percentage) {
-    if (percentage.compareTo(BigDecimal.ZERO) >= 0 && percentage.compareTo(new BigDecimal("100")) <= 0) {
-        this.completionPercentage = percentage;
-
-        // Auto-update status based on completion
-        if (percentage.compareTo(new BigDecimal("100")) == 0) {
-            this.status = ProjectStatus.COMPLETED;
-        } else if (this.status == ProjectStatus.COMPLETED && percentage.compareTo(new BigDecimal("100")) < 0) {
-            this.status = ProjectStatus.ACTIVE;
-        }
-    }
-}
-
-public boolean hasManager() {
-    return this.manager != null;
-}
-
-public boolean isAssigned(User user) {
-    return assignments.stream()
-            .anyMatch(assignment -> assignment.getUser().equals(user));
-}
-
-public boolean isManager(User user) {
-    return this.manager != null && this.manager.equals(user);
-}
-
-//
