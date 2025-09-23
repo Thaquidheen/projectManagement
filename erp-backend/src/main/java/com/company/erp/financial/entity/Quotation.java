@@ -131,6 +131,23 @@ public class Quotation extends AuditableEntity {
         this.approvedBy = approver;
         this.approvedDate = LocalDateTime.now();
     }
+    public void reject(String rejectionReason) {
+        if (!isSubmitted()) {
+            throw new IllegalStateException("Quotation cannot be rejected in current state");
+        }
+        this.status = QuotationStatus.REJECTED;
+        this.rejectionReason = rejectionReason;
+    }
+
+    public boolean canBeApproved() {
+        return QuotationStatus.SUBMITTED.equals(this.status) ||
+                QuotationStatus.UNDER_REVIEW.equals(this.status);
+    }
+
+    public boolean canBeRejected() {
+        return QuotationStatus.SUBMITTED.equals(this.status) ||
+                QuotationStatus.UNDER_REVIEW.equals(this.status);
+    }
 
     public void reject(User approver, String rejectionReason) {
         if (!isSubmitted()) {
@@ -157,6 +174,7 @@ public class Quotation extends AuditableEntity {
     public Project getProject() {
         return project;
     }
+
 
     public void setProject(Project project) {
         this.project = project;

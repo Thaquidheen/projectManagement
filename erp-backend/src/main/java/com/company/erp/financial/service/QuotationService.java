@@ -196,33 +196,7 @@ public class QuotationService {
     /**
      * Reject quotation (Account Managers only)
      */
-    public QuotationResponse rejectQuotation(Long quotationId, String rejectionReason) {
-        logger.info("Rejecting quotation {} with reason: {}", quotationId, rejectionReason);
 
-        UserPrincipal currentUser = getCurrentUser();
-
-        // Only Account Managers and Super Admin can reject
-        if (!currentUser.hasAnyRole("SUPER_ADMIN", "ACCOUNT_MANAGER")) {
-            throw new UnauthorizedAccessException("Only Account Managers can reject quotations");
-        }
-
-        Quotation quotation = quotationRepository.findByIdWithProjectAndItems(quotationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Quotation", "id", quotationId));
-
-        if (!quotation.canBeRejected()) {
-            throw new BusinessException("QUOTATION_NOT_REJECTABLE",
-                    "Quotation cannot be rejected in " + quotation.getStatus() + " status");
-        }
-
-        User approver = getUserById(currentUser.getId());
-        quotation.reject(approver, rejectionReason);
-
-        Quotation savedQuotation = quotationRepository.save(quotation);
-
-        logger.info("Quotation {} rejected successfully by {}", quotationId, approver.getFullName());
-
-        return convertToQuotationResponse(savedQuotation);
-    }
 
     /**
      * Get quotation by ID (with access control)
@@ -329,6 +303,34 @@ public class QuotationService {
         return quotations.map(this::convertToQuotationSummaryResponse);
     }
 
+
+    public QuotationResponse rejectQuotation(Long quotationId, String rejectionReason) {
+        logger.info("Rejecting quotation {} with reason: {}", quotationId, rejectionReason);
+
+        UserPrincipal currentUser = getCurrentUser();
+
+        // Only Account Managers and Super Admin can reject
+        if (!currentUser.hasAnyRole("SUPER_ADMIN", "ACCOUNT_MANAGER")) {
+            throw new UnauthorizedAccessException("Only Account Managers can reject quotations");
+        }
+
+        Quotation quotation = quotationRepository.findByIdWithProjectAndItems(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation", "id", quotationId));
+
+        if (!quotation.canBeRejected()) {
+            throw new BusinessException("QUOTATION_NOT_REJECTABLE",
+                    "Quotation cannot be rejected in " + quotation.getStatus() + " status");
+        }
+
+        User approver = getUserById(currentUser.getId());
+        quotation.reject(approver, rejectionReason);
+
+        Quotation savedQuotation = quotationRepository.save(quotation);
+
+        logger.info("Quotation {} rejected successfully by {}", quotationId, approver.getFullName());
+
+        return convertToQuotationResponse(savedQuotation);
+    }
     /**
      * Delete quotation (only if in DRAFT status)
      */
@@ -350,6 +352,14 @@ public class QuotationService {
         logger.info("Quotation {} deleted successfully", quotationId);
     }
 
+    public boolean canUserAccessQuotation(Long quotationId, Long userId) {
+        try {
+            getQuotationWithAccess(quotationId, userId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     /**
      * Get quotation statistics for dashboard
      */
