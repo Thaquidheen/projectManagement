@@ -37,11 +37,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwt = getJwtFromRequest(request);
+            logger.debug("Processing request: {} with JWT: {}", request.getRequestURI(),
+                    jwt != null ? "present" : "absent");
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 String username = tokenProvider.getUsernameFromToken(jwt);
+                logger.debug("JWT is valid for user: {}", username);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                logger.debug("Loaded user details for: {}, authorities: {}",
+                        username, userDetails.getAuthorities());
 
                 if (userDetails != null && userDetails.isEnabled()) {
                     UsernamePasswordAuthenticationToken authentication =
@@ -51,11 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    logger.debug("Set Security Context for user: {}", username);
+                    logger.debug("Set Security Context for user: {} with authorities: {}",
+                            username, userDetails.getAuthorities());
                 }
+            } else {
+                logger.debug("JWT validation failed or no JWT present for request: {}", request.getRequestURI());
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            logger.error("Could not set user authentication in security context for request: {}",
+                    request.getRequestURI(), ex);
             // Clear the security context in case of any exception
             SecurityContextHolder.clearContext();
         }
@@ -81,9 +90,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
-        // Skip authentication for these paths - UPDATED PATTERNS
-        return path.startsWith("/api/auth/") ||
-                path.startsWith("/auth/") ||  // Added this pattern
+        // FIXED: Only skip authentication for login and public endpoints
+        // Don't skip /auth/me, /auth/debug-authorities, etc.
+        boolean shouldSkip = path.equals("/api/auth/login") ||
+                path.equals("/auth/login") ||
                 path.startsWith("/api/actuator/") ||
                 path.startsWith("/actuator/") ||
                 path.startsWith("/api/swagger-ui") ||
@@ -95,6 +105,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.equals("/") ||
                 path.equals("/error") ||
                 path.equals("/health") ||
-                path.equals("/api/health");
+                path.equals("/api/health") ||
+                path.equals("/api/auth/health") ||
+                path.equals("/auth/health");
+
+        logger.debug("Request path: {}, shouldSkip: {}", path, shouldSkip);
+        return shouldSkip;
     }
 }

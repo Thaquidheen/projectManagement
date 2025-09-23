@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/projects")
+@RequestMapping("/projects")
 @Tag(name = "Project Management", description = "Project CRUD operations and management endpoints")
 @Validated
 public class ProjectController {

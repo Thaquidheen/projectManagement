@@ -36,8 +36,9 @@ public class UserPrincipal implements UserDetails {
     }
 
     public static UserPrincipal create(User user) {
+        // FIXED: Remove ROLE_ prefix since database already contains correct role names
         List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
 
         return new UserPrincipal(
@@ -114,10 +115,10 @@ public class UserPrincipal implements UserDetails {
         return passwordExpired;
     }
 
-    // Utility methods
+    // Utility methods - FIXED: Check authority directly without ROLE_ prefix
     public boolean hasRole(String role) {
         return authorities.stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role));
+                .anyMatch(authority -> authority.getAuthority().equals(role));
     }
 
     public boolean hasAnyRole(String... roles) {

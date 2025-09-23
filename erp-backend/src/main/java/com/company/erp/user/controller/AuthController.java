@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,7 +63,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Logout successful")
     })
     @PostMapping("/logout")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<Map<String, String>> logout() {
         authService.logout();
 
@@ -76,7 +79,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/refresh")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<LoginResponse> refreshToken() {
         LoginResponse loginResponse = authService.refreshToken();
         return ResponseEntity.ok(loginResponse);
@@ -118,7 +121,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/change-password")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<Map<String, String>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         // Validate passwords match
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
@@ -141,7 +144,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "User is not authenticated")
     })
     @GetMapping("/check")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<Map<String, Object>> checkAuth() {
         UserPrincipal currentUser = authService.getCurrentUser();
 
@@ -162,7 +165,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/roles")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<Map<String, Object>> checkRoles(@RequestParam(required = false) String role) {
         Map<String, Object> response = new HashMap<>();
 
@@ -190,5 +193,26 @@ public class AuthController {
         response.put("service", "Authentication Service");
 
         return ResponseEntity.ok(response);
+    }
+
+    // Debug endpoint to check authorities
+    @GetMapping("/debug-authorities")
+    public ResponseEntity<Map<String, Object>> debugAuthorities() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Map<String, Object> debug = new HashMap<>();
+        debug.put("authenticated", authentication.isAuthenticated());
+        debug.put("principal", authentication.getPrincipal().getClass().getSimpleName());
+        debug.put("authorities", authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+
+        if (authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
+            debug.put("userId", user.getId());
+            debug.put("username", user.getUsername());
+        }
+
+        return ResponseEntity.ok(debug);
     }
 }

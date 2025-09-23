@@ -70,55 +70,32 @@ public class SecurityConfig {
 
                 // Set permissions on endpoints
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - FIXED PATH PATTERNS
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()  // Added this for your current request pattern
-                        .requestMatchers("/api/actuator/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/swagger-ui/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/api/v3/api-docs/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/swagger-resources/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/api/webjars/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
-                        .requestMatchers("/api/").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/error").permitAll()
-
-                        // Health check endpoints
-                        .requestMatchers("/health").permitAll()
-                        .requestMatchers("/api/health").permitAll()
+                        // Public endpoints - ONLY login should be public
+                        .requestMatchers("/api/auth/login", "/auth/login").permitAll()
+                        .requestMatchers("/api/auth/health", "/auth/health").permitAll()
+                        .requestMatchers("/api/actuator/**", "/actuator/**").permitAll()
+                        .requestMatchers("/api/swagger-ui/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/v3/api-docs/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/swagger-resources/**", "/swagger-resources/**").permitAll()
+                        .requestMatchers("/api/webjars/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/", "/", "/error").permitAll()
+                        .requestMatchers("/health", "/api/health").permitAll()
 
                         // Admin only endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/users/*/roles").hasRole("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("SUPER_ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*/roles").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers("/api/admin/**").hasAuthority("SUPER_ADMIN")
 
                         // Project management endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/projects").hasAnyRole("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/projects/*/assign").hasAnyRole("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/projects").hasAnyRole("SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNT_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/projects/*/assign").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/projects").hasAnyAuthority("SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNT_MANAGER")
 
-                        // Quotation endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/quotations").hasAnyRole("PROJECT_MANAGER", "SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/quotations/*").hasAnyRole("PROJECT_MANAGER", "SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/quotations").hasAnyRole("PROJECT_MANAGER", "ACCOUNT_MANAGER", "SUPER_ADMIN")
-
-                        // Approval endpoints
-                        .requestMatchers("/api/approvals/**").hasAnyRole("ACCOUNT_MANAGER", "SUPER_ADMIN")
-
-                        // Payment endpoints
-                        .requestMatchers("/api/payments/**").hasAnyRole("ACCOUNT_MANAGER", "SUPER_ADMIN")
-
-                        // Reports endpoints
-                        .requestMatchers("/api/reports/**").hasAnyRole("ACCOUNT_MANAGER", "SUPER_ADMIN")
-
-                        // Profile endpoints (any authenticated user)
-                        .requestMatchers(HttpMethod.GET, "/api/profile").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/profile").authenticated()
+                        // Auth endpoints that require authentication
+                        .requestMatchers("/api/auth/me", "/auth/me").authenticated()
+                        .requestMatchers("/api/auth/debug**", "/auth/debug**").authenticated()
+                        .requestMatchers("/api/auth/**", "/auth/**").authenticated()
 
                         // All other requests need authentication
                         .anyRequest().authenticated()
