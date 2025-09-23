@@ -1,6 +1,5 @@
 package com.company.erp.workflow.entity;
 
-// Approval Status Enum
 public enum ApprovalStatus {
     PENDING("Pending", "Awaiting approval decision"),
     APPROVED("Approved", "Quotation has been approved"),

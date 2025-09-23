@@ -187,4 +187,170 @@ public class ApprovalService {
      * Get approval statistics
      */
     @Transactional(readOnly = true)
-    public ApprovalStatistics getApprovalStatistics(Long approverId)
+    public ApprovalStatistics getApprovalStatistics(Long approverId) {
+        UserPrincipal currentUser = getCurrentUser();
+
+        // Account managers can view their own stats or system-wide stats
+        if (!currentUser.hasAnyRole("SUPER_ADMIN", "ACCOUNT_MANAGER")) {
+            throw new UnauthorizedAccessException("Only Account Managers can view approval statistics");
+        }
+
+        if (approverId == null) {
+            approverId = currentUser.getId();
+        }
+
+        ApprovalStatistics stats = new ApprovalStatistics();
+        stats.setPendingApprovals(approvalRepository.countByApproverIdAndStatus(approverId, ApprovalStatus.PENDING));
+        stats.setApprovedCount(approvalRepository.countByApproverIdAndStatus(approverId, ApprovalStatus.APPROVED));
+        stats.setRejectedCount(approvalRepository.countByApproverIdAndStatus(approverId, ApprovalStatus.REJECTED));
+        stats.setChangesRequestedCount(approvalRepository.countByApproverIdAndStatus(approverId, ApprovalStatus.CHANGES_REQUESTED));
+
+        // Calculate average processing time
+        stats.setAverageProcessingDays(approvalRepository.getAverageProcessingDays(approverId));
+
+        return stats;
+    }
+
+    /**
+     * Get urgent approvals (pending more than 3 days)
+     */
+    @Transactional(readOnly = true)
+    public Page<PendingApprovalsResponse> getUrgentApprovals(Pageable pageable) {
+        UserPrincipal currentUser = getCurrentUser();
+        validateApprovalAccess(currentUser);
+
+        LocalDateTime urgentThreshold = LocalDateTime.now().minusDays(3);
+
+        Page<Quotation> urgentQuotations = quotationRepository.findByStatusAndSubmittedDateBeforeWithProject(
+                QuotationStatus.SUBMITTED, urgentThreshold, pageable);
+
+        return urgentQuotations.map(quotation -> {
+            PendingApprovalsResponse response = convertToPendingApprovalResponse(quotation);
+            response.setIsUrgent(true);
+            response.setPriority("HIGH");
+            return response;
+        });
+    }
+
+    // Private helper methods
+
+    private void validateApprovalAccess(UserPrincipal currentUser) {
+        if (!currentUser.hasAnyRole("SUPER_ADMIN", "ACCOUNT_MANAGER")) {
+            throw new UnauthorizedAccessException("Only Account Managers can process approvals");
+        }
+    }
+
+    private void updateProjectBudget(Quotation quotation) {
+        // Update project spent amount when quotation is approved
+        quotation.getProject().setSpentAmount(
+                quotation.getProject().getSpentAmount().add(quotation.getTotalAmount()));
+    }
+
+    private UserPrincipal getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof UserPrincipal)) {
+            throw new BusinessException("NO_AUTHENTICATED_USER", "No authenticated user found");
+        }
+        return (UserPrincipal) authentication.getPrincipal();
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+    }
+
+    private ApprovalResponse convertToApprovalResponse(Approval approval) {
+        ApprovalResponse response = new ApprovalResponse();
+        response.setId(approval.getId());
+        response.setQuotationId(approval.getQuotation().getId());
+        response.setProjectName(approval.getQuotation().getProject().getName());
+        response.setQuotationDescription(approval.getQuotation().getDescription());
+        response.setTotalAmount(approval.getQuotation().getTotalAmount());
+        response.setCurrency(approval.getQuotation().getCurrency());
+        response.setQuotationStatus(approval.getQuotation().getStatus().name());
+        response.setApproverName(approval.getApprover().getFullName());
+        response.setApproverUsername(approval.getApprover().getUsername());
+        response.setStatus(approval.getStatus().name());
+        response.setComments(approval.getComments());
+        response.setApprovalDate(approval.getApprovalDate());
+        response.setCreatedDate(approval.getCreatedDate());
+        response.setLevelOrder(approval.getLevelOrder());
+
+        // Add project manager info
+        response.setCreatedByName(approval.getQuotation().getCreatedBy().getFullName());
+        response.setCreatedByUsername(approval.getQuotation().getCreatedBy().getUsername());
+
+        // Add budget info
+        response.setProjectBudget(approval.getQuotation().getProject().getAllocatedBudget());
+        response.setRemainingBudget(approval.getQuotation().getProject().getRemainingBudget());
+        response.setExceedsBudget(approval.getQuotation().exceedsBudget());
+
+        return response;
+    }
+
+    private PendingApprovalsResponse convertToPendingApprovalResponse(Quotation quotation) {
+        PendingApprovalsResponse response = new PendingApprovalsResponse();
+        response.setQuotationId(quotation.getId());
+        response.setProjectId(quotation.getProject().getId());
+        response.setProjectName(quotation.getProject().getName());
+        response.setDescription(quotation.getDescription());
+        response.setTotalAmount(quotation.getTotalAmount());
+        response.setCurrency(quotation.getCurrency());
+        response.setCreatedByName(quotation.getCreatedBy().getFullName());
+        response.setCreatedByUsername(quotation.getCreatedBy().getUsername());
+        response.setSubmittedDate(quotation.getSubmittedDate());
+        response.setCreatedDate(quotation.getCreatedDate());
+        response.setItemCount(quotation.getItems() != null ? quotation.getItems().size() : 0);
+
+        // Calculate days pending
+        if (quotation.getSubmittedDate() != null) {
+            long daysPending = ChronoUnit.DAYS.between(quotation.getSubmittedDate(), LocalDateTime.now());
+            response.setDaysPending((int) daysPending);
+
+            // Set priority based on days pending
+            if (daysPending >= 5) {
+                response.setPriority("HIGH");
+                response.setIsUrgent(true);
+            } else if (daysPending >= 2) {
+                response.setPriority("MEDIUM");
+                response.setIsUrgent(false);
+            } else {
+                response.setPriority("LOW");
+                response.setIsUrgent(false);
+            }
+        }
+
+        // Budget information
+        response.setProjectBudget(quotation.getProject().getAllocatedBudget());
+        response.setRemainingBudget(quotation.getProject().getRemainingBudget());
+        response.setExceedsBudget(quotation.exceedsBudget());
+
+        return response;
+    }
+
+    // Statistics inner class
+    public static class ApprovalStatistics {
+        private long pendingApprovals;
+        private long approvedCount;
+        private long rejectedCount;
+        private long changesRequestedCount;
+        private double averageProcessingDays;
+
+        // Getters and Setters
+        public long getPendingApprovals() { return pendingApprovals; }
+        public void setPendingApprovals(long pendingApprovals) { this.pendingApprovals = pendingApprovals; }
+
+        public long getApprovedCount() { return approvedCount; }
+        public void setApprovedCount(long approvedCount) { this.approvedCount = approvedCount; }
+
+        public long getRejectedCount() { return rejectedCount; }
+        public void setRejectedCount(long rejectedCount) { this.rejectedCount = rejectedCount; }
+
+        public long getChangesRequestedCount() { return changesRequestedCount; }
+        public void setChangesRequestedCount(long changesRequestedCount) { this.changesRequestedCount = changesRequestedCount; }
+
+        public double getAverageProcessingDays() { return averageProcessingDays; }
+        public void setAverageProcessingDays(double averageProcessingDays) { this.averageProcessingDays = averageProcessingDays; }
+    }
+}
