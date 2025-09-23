@@ -60,7 +60,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Logout successful")
     })
     @PostMapping("/logout")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
     public ResponseEntity<Map<String, String>> logout() {
         authService.logout();
 
@@ -76,7 +76,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/refresh")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
     public ResponseEntity<LoginResponse> refreshToken() {
         LoginResponse loginResponse = authService.refreshToken();
         return ResponseEntity.ok(loginResponse);
@@ -88,7 +88,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/me")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('PROJECT_MANAGER') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('EMPLOYEE')")
     public ResponseEntity<UserInfoResponse> getCurrentUser() {
         UserPrincipal currentUser = authService.getCurrentUser();
 
@@ -118,7 +118,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/change-password")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
     public ResponseEntity<Map<String, String>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         // Validate passwords match
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
@@ -141,7 +141,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "User is not authenticated")
     })
     @GetMapping("/check")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
     public ResponseEntity<Map<String, Object>> checkAuth() {
         UserPrincipal currentUser = authService.getCurrentUser();
 
@@ -162,7 +162,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/roles")
-    @PreAuthorize("hasRole('USER') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('ACCOUNT_MANAGER') or hasRole('EMPLOYEE')")
     public ResponseEntity<Map<String, Object>> checkRoles(@RequestParam(required = false) String role) {
         Map<String, Object> response = new HashMap<>();
 

@@ -25,11 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         logger.debug("Loading user by username: {}", username);
 
-        User user = userRepository.findByUsernameAndActiveTrue(username)
+        // FIXED: Use findByUsernameWithRoles instead of findByUsernameAndActiveTrue
+        User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         String.format("User not found with username: %s", username)));
 
         logger.debug("Found user: {} with {} roles", user.getUsername(), user.getRoles().size());
+
+        // Debug: Print the actual roles
+        user.getRoles().forEach(role ->
+                logger.debug("User {} has role: {}", username, role.getName()));
 
         return UserPrincipal.create(user);
     }
@@ -38,7 +43,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserById(Long id) {
         logger.debug("Loading user by ID: {}", id);
 
-        User user = userRepository.findByIdAndActiveTrue(id)
+        // FIXED: Use findByIdWithRolesAndBankDetails instead of findByIdAndActiveTrue
+        User user = userRepository.findByIdWithRolesAndBankDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         logger.debug("Found user: {} with ID: {}", user.getUsername(), id);
