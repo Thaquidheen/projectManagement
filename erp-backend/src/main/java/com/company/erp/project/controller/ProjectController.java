@@ -52,7 +52,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<ProjectResponse> createProject(@Valid @RequestBody CreateProjectRequest request) {
         logger.info("Creating new project: {}", request.getName());
 
@@ -69,7 +69,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @GetMapping("/{projectId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ACCOUNT_MANAGER') or @projectService.canUserAccessProject(#projectId, authentication.principal.id)")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('ACCOUNT_MANAGER') or @projectService.canUserAccessProject(#projectId, authentication.principal.id)")
     public ResponseEntity<ProjectResponse> getProjectById(
             @Parameter(description = "Project ID") @PathVariable Long projectId) {
 
@@ -84,7 +84,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ACCOUNT_MANAGER')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('ACCOUNT_MANAGER')")
     public ResponseEntity<Page<ProjectResponse>> getAllProjects(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
@@ -104,7 +104,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @GetMapping("/search")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ACCOUNT_MANAGER') or hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN') or hasAuthority('ACCOUNT_MANAGER') or hasAuthority('PROJECT_MANAGER')")
     public ResponseEntity<Page<ProjectResponse>> searchProjects(
             @Parameter(description = "Project name search term") @RequestParam(required = false) String name,
             @Parameter(description = "Location filter") @RequestParam(required = false) String location,
@@ -133,7 +133,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @GetMapping("/my-projects")
-    @PreAuthorize("hasRole('PROJECT_MANAGER') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('PROJECT_MANAGER') or hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<List<ProjectResponse>> getMyProjects() {
         // Get current user ID from security context
         Long currentUserId = getCurrentUserId(); // This method needs to be implemented

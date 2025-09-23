@@ -25,10 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         logger.debug("Loading user by username: {}", username);
 
-        // FIXED: Use findByUsernameWithRoles instead of findByUsernameAndActiveTrue
+        // Find user with roles - must be active
         User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         String.format("User not found with username: %s", username)));
+
+        // Check if user is active
+        if (!user.getActive()) {
+            logger.warn("User {} is not active", username);
+            throw new UsernameNotFoundException("User account is inactive");
+        }
 
         logger.debug("Found user: {} with {} roles", user.getUsername(), user.getRoles().size());
 
@@ -36,31 +42,25 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.getRoles().forEach(role ->
                 logger.debug("User {} has role: {}", username, role.getName()));
 
-        return UserPrincipal.create(user);
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+
+        logger.debug("Created UserPrincipal with authorities: {}", userPrincipal.getAuthorities());
+
+        return userPrincipal;
     }
 
     @Transactional(readOnly = true)
     public UserDetails loadUserById(Long id) {
         logger.debug("Loading user by ID: {}", id);
 
-        // FIXED: Use findByIdWithRolesAndBankDetails instead of findByIdAndActiveTrue
         User user = userRepository.findByIdWithRolesAndBankDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
+        if (!user.getActive()) {
+            throw new ResourceNotFoundException("Active user", "id", id);
+        }
+
         logger.debug("Found user: {} with ID: {}", user.getUsername(), id);
-
-        return UserPrincipal.create(user);
-    }
-
-    @Transactional(readOnly = true)
-    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
-        logger.debug("Loading user by email: {}", email);
-
-        User user = userRepository.findByEmailAndActiveTrue(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        String.format("User not found with email: %s", email)));
-
-        logger.debug("Found user: {} with email: {}", user.getUsername(), email);
 
         return UserPrincipal.create(user);
     }
