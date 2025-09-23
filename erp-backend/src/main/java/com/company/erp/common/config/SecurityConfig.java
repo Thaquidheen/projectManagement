@@ -70,14 +70,26 @@ public class SecurityConfig {
 
                 // Set permissions on endpoints
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+                        // Public endpoints - FIXED PATH PATTERNS
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()  // Added this for your current request pattern
                         .requestMatchers("/api/actuator/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/api/v3/api-docs/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/swagger-resources/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
                         .requestMatchers("/api/webjars/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/api/").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/error").permitAll()
+
+                        // Health check endpoints
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/api/health").permitAll()
 
                         // Admin only endpoints
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole("SUPER_ADMIN")
@@ -156,7 +168,7 @@ public class SecurityConfig {
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

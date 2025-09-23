@@ -81,12 +81,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
-        // Skip authentication for these paths
+        // Skip authentication for these paths - UPDATED PATTERNS
         return path.startsWith("/api/auth/") ||
+                path.startsWith("/auth/") ||  // Added this pattern
                 path.startsWith("/api/actuator/") ||
+                path.startsWith("/actuator/") ||
                 path.startsWith("/api/swagger-ui") ||
+                path.startsWith("/swagger-ui") ||
                 path.startsWith("/api/v3/api-docs") ||
+                path.startsWith("/v3/api-docs") ||
                 path.equals("/api/") ||
-                path.equals("/api");
+                path.equals("/api") ||
+                path.equals("/") ||
+                path.equals("/error") ||
+                path.equals("/health") ||
+                path.equals("/api/health");
     }
 }
