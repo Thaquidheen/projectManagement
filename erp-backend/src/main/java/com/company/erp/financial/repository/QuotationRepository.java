@@ -139,8 +139,7 @@ public interface QuotationRepository extends JpaRepository<Quotation, Long> {
                                                                   @Param("submittedBefore") LocalDateTime submittedBefore,
                                                                   Pageable pageable);
 
-    // Find quotations by multiple statuses
     @Query("SELECT q FROM Quotation q LEFT JOIN FETCH q.project LEFT JOIN FETCH q.createdBy " +
             "WHERE q.status IN :statuses AND q.active = true")
-    Page<Quotation> findByStatusInWithProject(@Param("statuses") List<QuotationS
+    Page<Quotation> findByStatusInWithProject(@Param("statuses") List<QuotationStatus> statuses, Pageable pageable);
 }

@@ -2,7 +2,6 @@ package com.company.erp.common.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.stereotype.Service;
 
 import java.lang.management.ManagementFactory;

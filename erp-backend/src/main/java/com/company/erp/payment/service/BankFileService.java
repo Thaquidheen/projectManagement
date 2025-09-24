@@ -165,7 +165,7 @@ public class BankFileService {
                 paymentBatchRepository.save(batch);
 
                 // Deactivate bank file record
-                BankFile bankFile = bankFileRepository.findByBatchIdAndActiveTrue(batchId)
+                BankFile bankFile = bankFileRepository.findFirstByBatchIdAndActiveTrue(batchId)
                         .orElse(null);
                 if (bankFile != null) {
                     bankFile.setActive(false);

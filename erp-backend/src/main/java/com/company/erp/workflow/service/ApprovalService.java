@@ -278,8 +278,8 @@ public class ApprovalService {
         response.setLevelOrder(approval.getLevelOrder());
 
         // Add project manager info
-        response.setCreatedByName(approval.getQuotation().getCreatedBy().getFullName());
-        response.setCreatedByUsername(approval.getQuotation().getCreatedBy().getUsername());
+        response.setCreatedByName(approval.getQuotation().getCreator().getFullName());
+        response.setCreatedByUsername(approval.getQuotation().getCreator().getUsername());
 
         // Add budget info
         response.setProjectBudget(approval.getQuotation().getProject().getAllocatedBudget());
@@ -297,8 +297,8 @@ public class ApprovalService {
         response.setDescription(quotation.getDescription());
         response.setTotalAmount(quotation.getTotalAmount());
         response.setCurrency(quotation.getCurrency());
-        response.setCreatedByName(quotation.getCreatedBy().getFullName());
-        response.setCreatedByUsername(quotation.getCreatedBy().getUsername());
+        response.setCreatedByName(quotation.getCreator().getFullName());
+        response.setCreatedByUsername(quotation.getCreator().getUsername());
         response.setSubmittedDate(quotation.getSubmittedDate());
         response.setCreatedDate(quotation.getCreatedDate());
         response.setItemCount(quotation.getItems() != null ? quotation.getItems().size() : 0);

@@ -1,5 +1,5 @@
 // AuditLog.java - Entity for audit trail
-package com.company.erp.common.entity;
+package com.company.erp.financial.entity;
 
 import com.company.erp.user.entity.User;
 import jakarta.persistence.*;

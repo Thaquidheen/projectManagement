@@ -1,26 +1,43 @@
 package com.company.erp.notification.entity;
 
 public enum NotificationPriority {
-    LOW(1, "Low Priority", "#28a745"),
-    MEDIUM(2, "Medium Priority", "#ffc107"),
-    HIGH(3, "High Priority", "#fd7e14"),
-    CRITICAL(4, "Critical", "#dc3545");
+    LOW("Low", "Low priority notification", "#28a745"),
+    NORMAL("Normal", "Normal priority notification", "#007bff"),
+    MEDIUM("Medium", "Medium priority notification", "#fd7e14"),
+    HIGH("High", "High priority notification", "#dc3545"),
+    CRITICAL("Critical", "Critical priority notification", "#dc3545");
 
-    private final int level;
     private final String displayName;
+    private final String description;
     private final String colorCode;
 
-    NotificationPriority(int level, String displayName, String colorCode) {
-        this.level = level;
+    NotificationPriority(String displayName, String description, String colorCode) {
         this.displayName = displayName;
+        this.description = description;
         this.colorCode = colorCode;
     }
 
-    public int getLevel() { return level; }
-    public String getDisplayName() { return displayName; }
-    public String getColorCode() { return colorCode; }
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getColorCode() {
+        return colorCode;
+    }
+
+    public int getPriorityLevel() {
+        return ordinal();
+    }
 
     public boolean isHigherThan(NotificationPriority other) {
-        return this.level > other.level;
+        return this.ordinal() > other.ordinal();
+    }
+
+    public boolean isAtLeast(NotificationPriority threshold) {
+        return this.ordinal() >= threshold.ordinal();
     }
 }

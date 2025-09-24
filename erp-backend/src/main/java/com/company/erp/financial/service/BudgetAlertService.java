@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,14 +18,11 @@ import java.util.stream.Collectors;
 public class BudgetAlertService {
 
     private final ProjectService projectService;
-    private final BudgetTrackingService budgetTrackingService;
     private final NotificationService notificationService;
 
     public BudgetAlertService(ProjectService projectService,
-                              BudgetTrackingService budgetTrackingService,
                               NotificationService notificationService) {
         this.projectService = projectService;
-        this.budgetTrackingService = budgetTrackingService;
         this.notificationService = notificationService;
     }
 
@@ -102,7 +100,7 @@ public class BudgetAlertService {
         // Calculate variance percentage
         BigDecimal variance = project.getSpentAmount().subtract(project.getAllocatedBudget());
         if (project.getAllocatedBudget().compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal variancePercentage = variance.divide(project.getAllocatedBudget(), 4, BigDecimal.ROUND_HALF_UP)
+            BigDecimal variancePercentage = variance.divide(project.getAllocatedBudget(), 4, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal("100"));
             alert.setVariancePercentage(variancePercentage);
         }

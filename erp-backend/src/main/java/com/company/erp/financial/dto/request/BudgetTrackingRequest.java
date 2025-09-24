@@ -1,11 +1,10 @@
 package com.company.erp.financial.dto.request;
 
 import com.company.erp.financial.entity.BudgetTrackingType;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class BudgetTrackingRequest {
 
@@ -15,17 +14,26 @@ public class BudgetTrackingRequest {
     @NotNull(message = "Tracking type is required")
     private BudgetTrackingType trackingType;
 
-    private String referenceType;
-    private Long referenceId;
-
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    @Digits(integer = 13, fraction = 2, message = "Invalid amount format")
     private BigDecimal amount;
 
+    @Size(max = 3, message = "Currency code must be 3 characters")
     private String currency = "SAR";
+
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
+
+    @Size(max = 100, message = "Category cannot exceed 100 characters")
     private String category;
-    private LocalDateTime transactionDate;
+
+    @Size(max = 50, message = "Reference type cannot exceed 50 characters")
+    private String referenceType;
+
+    private Long referenceId;
+
+    private LocalDate transactionDate;
 
     // Constructors
     public BudgetTrackingRequest() {}
@@ -36,12 +44,6 @@ public class BudgetTrackingRequest {
 
     public BudgetTrackingType getTrackingType() { return trackingType; }
     public void setTrackingType(BudgetTrackingType trackingType) { this.trackingType = trackingType; }
-
-    public String getReferenceType() { return referenceType; }
-    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
-
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
@@ -55,6 +57,12 @@ public class BudgetTrackingRequest {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public LocalDateTime getTransactionDate() { return transactionDate; }
-    public void setTransactionDate(LocalDateTime transactionDate) { this.transactionDate = transactionDate; }
+    public String getReferenceType() { return referenceType; }
+    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+
+    public Long getReferenceId() { return referenceId; }
+    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+
+    public LocalDate getTransactionDate() { return transactionDate; }
+    public void setTransactionDate(LocalDate transactionDate) { this.transactionDate = transactionDate; }
 }

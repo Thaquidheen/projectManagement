@@ -4,7 +4,7 @@ package com.company.erp.common.service;
 import com.company.erp.common.entity.AuditLog;
 import com.company.erp.common.repository.AuditLogRepository;
 import com.company.erp.user.entity.User;
-import com.company.erp.user.service.UserService;
+import com.company.erp.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -27,21 +27,21 @@ public class AuditService {
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
 
     private final AuditLogRepository auditLogRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
     public AuditService(AuditLogRepository auditLogRepository,
-                        UserService userService,
+                        UserRepository userRepository,
                         ObjectMapper objectMapper) {
         this.auditLogRepository = auditLogRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
         this.objectMapper = objectMapper;
     }
 
     public void logAction(Long userId, String actionType, String entityType, Long entityId,
                           String description, Object oldValues, Object newValues) {
         try {
-            User user = userService.getUserById(userId);
+            User user = userRepository.findById(userId).orElse(null);
             AuditLog auditLog = new AuditLog(user, actionType, entityType, entityId, description);
 
             if (oldValues != null) {
@@ -72,7 +72,7 @@ public class AuditService {
                                    Long entityId, Long projectId, String description,
                                    Object oldValues, Object newValues) {
         try {
-            User user = userService.getUserById(userId);
+            User user = userRepository.findById(userId).orElse(null);
             AuditLog auditLog = new AuditLog(user, actionType, entityType, entityId, description);
             auditLog.setProjectId(projectId);
 

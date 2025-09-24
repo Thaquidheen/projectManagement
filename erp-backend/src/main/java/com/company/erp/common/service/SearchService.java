@@ -7,7 +7,7 @@ import com.company.erp.document.service.DocumentService;
 import com.company.erp.financial.service.QuotationService;
 import com.company.erp.project.service.ProjectService;
 import com.company.erp.user.entity.User;
-import com.company.erp.user.service.UserService;
+import com.company.erp.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,23 +27,24 @@ public class SearchService {
     private final ProjectService projectService;
     private final QuotationService quotationService;
     private final DocumentService documentService;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final AuditService auditService;
 
     public SearchService(ProjectService projectService,
                          QuotationService quotationService,
                          DocumentService documentService,
-                         UserService userService,
+                         UserRepository userRepository,
                          AuditService auditService) {
         this.projectService = projectService;
         this.quotationService = quotationService;
         this.documentService = documentService;
-        this.userService = userService;
+        this.userRepository = userRepository;
         this.auditService = auditService;
     }
 
     public Page<SearchResult> universalSearch(SearchRequest request, Long userId, Pageable pageable) {
-        User user = userService.getUserById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         List<SearchResult> allResults = new ArrayList<>();
 
         try {
@@ -107,7 +108,7 @@ public class SearchService {
     private List<SearchResult> searchUsers(SearchRequest request, User user) {
         // Implementation would call UserService with search parameters
         // Only allow if user has appropriate permissions
-        if (user.getRole().name().equals("SUPER_ADMIN") || user.getRole().name().equals("ACCOUNT_MANAGER")) {
+        if (user.hasRole("SUPER_ADMIN") || user.hasRole("ACCOUNT_MANAGER")) {
             return Collections.emptyList(); // Placeholder
         }
         return Collections.emptyList();
@@ -153,7 +154,8 @@ public class SearchService {
     }
 
     public List<String> getSuggestions(String partialQuery, Long userId, int maxSuggestions) {
-        User user = userService.getUserById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         Set<String> suggestions = new LinkedHashSet<>();
 
         try {
@@ -194,7 +196,8 @@ public class SearchService {
     }
 
     public Map<String, Long> getSearchFacets(String query, Long userId) {
-        User user = userService.getUserById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         Map<String, Long> facets = new HashMap<>();
 
         try {
@@ -235,7 +238,6 @@ public class SearchService {
     }
 
     private boolean canSearchUsers(User user) {
-        return user.getRole().name().equals("SUPER_ADMIN") ||
-                user.getRole().name().equals("ACCOUNT_MANAGER");
+        return user.hasRole("SUPER_ADMIN") || user.hasRole("ACCOUNT_MANAGER");
     }
 }

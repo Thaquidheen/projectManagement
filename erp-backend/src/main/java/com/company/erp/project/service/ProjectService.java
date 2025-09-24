@@ -186,6 +186,14 @@ public class ProjectService {
     }
 
     /**
+     * Get active projects as entities (for internal services)
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getActiveProjects() {
+        return projectRepository.findByStatusAndActiveTrue(ProjectStatus.ACTIVE);
+    }
+
+    /**
      * Update project status
      */
     public ProjectResponse updateProjectStatus(Long projectId, ProjectStatus status) {

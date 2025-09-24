@@ -14,7 +14,7 @@ public interface BankFileRepository extends JpaRepository<BankFile, Long> {
 
     // Find by batch
     List<BankFile> findByBatchIdAndActiveTrue(Long batchId);
-    Optional<BankFile> findByBatchIdAndActiveTrue(Long batchId);
+    Optional<BankFile> findFirstByBatchIdAndActiveTrue(Long batchId);
 
     // Find by bank name
     List<BankFile> findByBankNameAndActiveTrue(String bankName);

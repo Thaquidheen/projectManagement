@@ -38,8 +38,8 @@ public class PaymentBatch extends AuditableEntity {
     private PaymentBatchStatus status = PaymentBatchStatus.DRAFT;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+    @JoinColumn(name = "created_by_user_id", nullable = false)
+    private User creator;
 
     @Column(name = "file_name", length = 200)
     private String fileName;
@@ -68,9 +68,9 @@ public class PaymentBatch extends AuditableEntity {
     // Constructors
     public PaymentBatch() {}
 
-    public PaymentBatch(String bankName, User createdBy) {
+    public PaymentBatch(String bankName, User creator) {
         this.bankName = bankName;
-        this.createdBy = createdBy;
+        this.creator = creator;
         this.batchNumber = generateBatchNumber();
         this.status = PaymentBatchStatus.DRAFT;
     }
@@ -191,12 +191,12 @@ public class PaymentBatch extends AuditableEntity {
         this.status = status;
     }
 
-    public User getCreatedBy() {
-        return createdBy;
+    public User getCreator() {
+        return creator;
     }
 
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
+    public void setCreator(User creator) {
+        this.creator = creator;
     }
 
     public String getFileName() {
@@ -275,4 +275,3 @@ public class PaymentBatch extends AuditableEntity {
                 '}';
     }
 }
-

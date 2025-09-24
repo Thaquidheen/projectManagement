@@ -20,8 +20,8 @@ public class Quotation extends AuditableEntity {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+    @JoinColumn(name = "created_by_user_id", nullable = false)
+    private User creator;
 
     @NotNull
     @DecimalMin(value = "0.0", inclusive = true)
@@ -65,9 +65,9 @@ public class Quotation extends AuditableEntity {
     // Constructors
     public Quotation() {}
 
-    public Quotation(Project project, User createdBy) {
+    public Quotation(Project project, User creator) {
         this.project = project;
-        this.createdBy = createdBy;
+        this.creator = creator;
     }
 
     // Business methods
@@ -180,12 +180,12 @@ public class Quotation extends AuditableEntity {
         this.project = project;
     }
 
-    public User getCreatedBy() {
-        return createdBy;
+    public User getCreator() {
+        return creator;
     }
 
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
+    public void setCreator(User creator) {
+        this.creator = creator;
     }
 
     public BigDecimal getTotalAmount() {
