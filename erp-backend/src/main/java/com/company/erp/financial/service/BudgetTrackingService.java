@@ -537,24 +537,20 @@ public class BudgetTrackingService {
         try {
             // Create notification for project manager
             if (project.getManager() != null) {
-                notificationService.sendBudgetAlert(project.getManager().getId(),
-                        "Budget Alert", message, alertLevel);
-            }
-                // Use generic notification method instead of specific sendBudgetAlert
                 notificationService.createNotification(project.getManager().getId(),
                         "Budget Alert", message, "BUDGET_ALERT");
-            List<User> superAdmins = userRepository.findByRoleAndActiveTrue("SUPER_ADMIN");
-            for (User admin : superAdmins) {
-                notificationService.sendBudgetAlert(admin.getId(),
-            // Find users with SUPER_ADMIN role using a different approach
+            }
+
+            // Find users with SUPER_ADMIN role using a stream-based approach
             List<User> superAdmins = userRepository.findByActiveTrue().stream()
                     .filter(user -> user.getRoles().stream().anyMatch(role -> "SUPER_ADMIN".equals(role.getName())))
                     .collect(Collectors.toList());
 
-            }
+            // Send notifications to all super admins
+            for (User admin : superAdmins) {
                 notificationService.createNotification(admin.getId(),
                         "Budget Alert", message, "BUDGET_ALERT");
-                    project.getId(), alertLevel, message);
+            }
 
         } catch (Exception e) {
             logger.error("Failed to send budget alert for project {}: {}",
@@ -666,4 +662,3 @@ public class BudgetTrackingService {
         public void setUtilizationPercentage(BigDecimal utilizationPercentage) { this.utilizationPercentage = utilizationPercentage; }
     }
 }
-

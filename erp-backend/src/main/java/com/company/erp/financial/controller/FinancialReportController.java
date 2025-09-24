@@ -7,8 +7,6 @@ import com.company.erp.financial.dto.response.FinancialDashboardResponse;
 import com.company.erp.financial.dto.response.FinancialReportResponse;
 import com.company.erp.financial.service.FinancialReportService;
 import com.company.erp.report.dto.request.ReportRequest;
-import com.company.erp.report.dto.response.AnalyticsResponse;
-import com.company.erp.report.dto.response.DashboardResponse;
 import com.company.erp.report.service.DashboardService;
 import com.company.erp.report.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
