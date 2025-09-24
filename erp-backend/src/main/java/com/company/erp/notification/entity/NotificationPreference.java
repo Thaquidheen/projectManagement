@@ -1,23 +1,3 @@
-// NotificationPreference.java
-package com.company.erp.notification.entity;
-
-import com.company.erp.common.entity.AuditableEntity;
-import com.company.erp.user.entity.User;
-import jakarta.persistence.*;
-
-import java.time.LocalTime;
-import java.util.Set;
-
-@Entity
-@Table(name = "notification_preferences")
-public class NotificationPreference extends AuditableEntity {
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
-
-    @Column(name = "email_enabled")
-    private Boolean emailEnabled = true;
 
 // NotificationPreference.java
 package com.company.erp.notification.entity;
